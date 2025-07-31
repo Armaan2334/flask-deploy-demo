@@ -1,19 +1,19 @@
-name: CI/CD Pipeline - Flask App
+name: CI/CD Pipeline - Flask App Deployment
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    - name: Checkout Repository
       uses: actions/checkout@v3
 
-    - name: Build Docker Image
-      run: docker build -t flask-deploy-demo .
+    - name: Print EC2 Host for Debugging
+      run: echo "Deploying to ${{ secrets.EC2_HOST }}"
 
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.0
@@ -22,8 +22,9 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          echo "Connected to EC2 Instance!"
           docker stop flask-app || true
           docker rm flask-app || true
-          docker pull flask-deploy-demo || true
+          docker build -t flask-deploy-demo .
           docker run -d --name flask-app -p 80:5000 flask-deploy-demo
 
