@@ -12,8 +12,14 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v3
 
-    - name: Print EC2 Host for Debugging
-      run: echo "Deploying to ${{ secrets.EC2_HOST }}"
+    - name: Upload Files to EC2 (Sync Project Directory)
+      uses: appleboy/scp-action@v0.1.5
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "."
+        target: "~/flask-deploy-demo"
 
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.0
@@ -22,9 +28,9 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          echo "Connected to EC2 Instance!"
+          cd ~/flask-deploy-demo
           docker stop flask-app || true
           docker rm flask-app || true
           docker build -t flask-deploy-demo .
           docker run -d --name flask-app -p 80:5000 flask-deploy-demo
-        strict: false
+
